@@ -7,16 +7,16 @@ import numpy as np
 
 class Neuron(object):
     def __init__(self):
-        self.bias = np.array([0], ndmin=2)
-        self.db = np.array([], ndmin=2)
-        self.weights = np.array([], ndmin=2)
-        self.dw = np.array([], ndmin=2)
-        self.activations = np.array([], ndmin=2)
+        self.bias = np.zeros((1, 1))
+        self.db = np.zeros((1, 0))
+        self.weights = np.zeros((1, 0))
+        self.dw = np.zeros((1, 0))
+        self.activations = np.zeros((1, 0))
 
         self.input_neurons = []
         self.output_neurons = []
-        self.gradients = np.array([], ndmin=2)
-        self.inputs = np.array([], ndmin=2)
+        self.gradients = np.zeros((1, 0))
+        self.inputs = np.zeros((1, 0))
 
         self.m = 0
 
@@ -59,7 +59,7 @@ class Neuron(object):
 class Input(Neuron):
     def __init__(self):
         super(Input, self).__init__()
-        self.activations = np.array([], ndmin=2)
+        self.activations = np.zeros((1, 0))
 
     #def __repr__(self):
     #    return 'Input Neuron {}'.format(self.activations.shape)
@@ -84,7 +84,7 @@ class Hidden(Neuron):
         super(Hidden, self).__init__()
         assert isinstance(activation_function, Activation)
         self.activation_function = activation_function
-        self.inputs = np.array([], ndmin=2)
+        self.inputs = np.zeros((1, 0))
 
     #def __repr__(self):
     #    return 'Hidden Neuron {}'.format(self.inputs.shape)
@@ -114,7 +114,7 @@ class Output(Hidden):
         super(Output, self).__init__(activation_function)
         assert isinstance(loss_function, Loss)
         self.loss_function = loss_function
-        self.y = np.array([], ndmin=2)
+        self.y = np.zeros((1, 0))
 
     #def __repr__(self):
     #    return 'Output Neuron {}'.format(self.y.shape)
