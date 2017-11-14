@@ -17,19 +17,19 @@ class Loss(object):
     @abc.abstractmethod
     def derivative(self):
         def func(y_hat, y):
-            return 1
+            return 0
         return func
 
     def gradient(self, y_hat, y):
         return self.derivative()(y_hat, y)
 
 
-class LogisticLoss(Loss):
+class LogLoss(Loss):
     def __repr__(self):
         return 'Logistic Loss Function'
 
     def compute(self, y_hat, y):
-        return y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat)
+        return - (y * np.log(y_hat) + (1 - y) * np.log(1 - y_hat))
 
     def derivative(self):
         def func(y_hat, y):

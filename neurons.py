@@ -12,8 +12,12 @@ class Neuron(object):
         self.weights = np.array([], ndmin=2)
         self.dw = np.array([], ndmin=2)
         self.activations = np.array([], ndmin=2)
+
         self.input_neurons = []
         self.output_neurons = []
+        self.gradients = np.array([], ndmin=2)
+        self.inputs = np.array([], ndmin=2)
+
         self.m = 0
 
     def update_parameters(self, learning_rate):
@@ -22,10 +26,12 @@ class Neuron(object):
 
     def add_output(self, neuron):
         self.output_neurons.append(neuron)
+        self.gradients = np.zeros((len(self.output_neurons), 0))
 
     def add_input(self, neuron):
         self.weights = np.append(self.weights, np.random.randn(1, 1) * 0.01).reshape(1, -1)
         self.input_neurons.append(neuron)
+        self.inputs = np.zeros((len(self.input_neurons), 0))
 
     def connect(self, neurons):
         assert neurons is not None
@@ -37,11 +43,26 @@ class Neuron(object):
             self.add_output(neuron)
             neuron.add_input(self)
 
+    def gradient_from(self, da, neuron):
+        i = next((i for i, v in enumerate(self.output_neurons) if v == neuron), None)
+        if self.gradients.shape[1] != da.shape[1]:
+            self.gradients = np.zeros((len(self.output_neurons), da.shape[1]))
+        self.gradients[i, np.newaxis, :] = da
+
+    def input_from(self, activations, neuron):
+        i = next((i for i, v in enumerate(self.input_neurons) if v == neuron), None)
+        if self.inputs.shape[1] != activations.shape[1]:
+            self.inputs = np.zeros((len(self.input_neurons), activations.shape[1]))
+        self.inputs[i, np.newaxis, :] = activations
+
 
 class Input(Neuron):
     def __init__(self):
         super(Input, self).__init__()
-        self.X = np.array([], ndmin=2)
+        self.activations = np.array([], ndmin=2)
+
+    #def __repr__(self):
+    #    return 'Input Neuron {}'.format(self.activations.shape)
 
     def examples(self, X):
         '''
@@ -54,6 +75,8 @@ class Input(Neuron):
 
         self.m = X.shape[1]
         self.activations = X
+        for neuron in self.output_neurons:
+            neuron.input_from(self.activations, self)
 
 
 class Hidden(Neuron):
@@ -63,21 +86,27 @@ class Hidden(Neuron):
         self.activation_function = activation_function
         self.inputs = np.array([], ndmin=2)
 
+    #def __repr__(self):
+    #    return 'Hidden Neuron {}'.format(self.inputs.shape)
+
     def forward_propagation(self):
-        self.inputs = np.concatenate(map(lambda neuron: neuron.activations, self.input_neurons))
         assert self.inputs.shape[1] > 0
         assert self.weights.shape[1] == self.inputs.shape[0]
         assert self.bias.shape == (1, 1)
 
         self.z = np.dot(self.weights, self.inputs) + self.bias
         self.activations = self.activation_function.evaluate(self.z)
+        for neuron in self.output_neurons:
+            neuron.input_from(self.activations, self)
 
     def back_propagation(self):
-        da = np.array(map(lambda neuron: neuron.da, self.output_neurons))
-        self.dz = da * self.activation_function.gradient(self.z)
+        self.dz = np.sum(self.gradients, axis=0, keepdims=True) * self.activation_function.gradient(self.z)
         self.dw = np.mean(self.dz * self.inputs, axis=1).reshape(1, -1)
         self.db = np.mean(self.dz, keepdims=True)
-        self.da = np.dot(self.weights.T, self.dz)
+        da = np.dot(self.weights.T, self.dz)
+        for i, neuron in enumerate(self.input_neurons):
+            gradient = da[i, np.newaxis, :]
+            neuron.gradient_from(gradient, self)
 
 
 class Output(Hidden):
@@ -86,6 +115,9 @@ class Output(Hidden):
         assert isinstance(loss_function, Loss)
         self.loss_function = loss_function
         self.y = np.array([], ndmin=2)
+
+    #def __repr__(self):
+    #    return 'Output Neuron {}'.format(self.y.shape)
 
     def responses(self, y):
         assert isinstance(y, np.ndarray)
@@ -102,4 +134,7 @@ class Output(Hidden):
         self.dz = self.loss_function.gradient(self.activations, self.y)
         self.dw = np.mean(self.dz * self.inputs, axis=1).reshape(1, -1)
         self.db = np.mean(self.dz, keepdims=True)
-        self.da = np.dot(self.weights.T, self.dz)
+        da = np.dot(self.weights.T, self.dz)
+        for i, neuron in enumerate(self.input_neurons):
+            gradient = da[i, np.newaxis, :]
+            neuron.gradient_from(gradient, self)

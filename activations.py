@@ -17,7 +17,7 @@ class Activation(object):
     @abc.abstractmethod
     def derivative(self):
         def func(z):
-            return 1
+            return 0
         return func
 
     def gradient(self, z):
@@ -71,11 +71,11 @@ class ReluActivation(Activation):
         return 'ReLU Activation Function'
 
     def evaluate(self, z):
-        return max(0, z)
+        return np.maximum(0, z)
 
     def derivative(self):
         def func(z):
-            return 1 if z >= 0 else 0
+            return z >= 0
         return func
 
 
@@ -84,9 +84,9 @@ class LeakyReluActivation(Activation):
         return 'Leaky ReLU Activation Function'
 
     def evaluate(self, z):
-        return max(0.01 * z, z)
+        return np.maximum(0.01 * z, z)
 
     def derivative(self):
         def func(z):
-            return 1 if z >= 0 else 0.01
+            return (z >= 0) * 0.99 + 0.01
         return func
