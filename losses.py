@@ -7,7 +7,7 @@ __author__ = 'dvgodoy'
 class Loss(object):
     __metaclass__ = abc.ABCMeta
 
-    def __repr__(self):
+    def __str__(self):
         return 'Loss Function'
 
     @abc.abstractmethod
@@ -25,7 +25,7 @@ class Loss(object):
 
 
 class LogLoss(Loss):
-    def __repr__(self):
+    def __str__(self):
         return 'Logistic Loss Function'
 
     def compute(self, y_hat, y):

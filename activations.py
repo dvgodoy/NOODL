@@ -7,7 +7,7 @@ __author__ = 'dvgodoy'
 class Activation(object):
     __metaclass__ = abc.ABCMeta
 
-    def __repr__(self):
+    def __str__(self):
         return 'Activation Function'
 
     @abc.abstractmethod
@@ -25,7 +25,7 @@ class Activation(object):
 
 
 class LinearActivation(Activation):
-    def __repr__(self):
+    def __str__(self):
         return 'Linear Activation Function'
 
     def evaluate(self, z):
@@ -38,7 +38,7 @@ class LinearActivation(Activation):
 
 
 class SigmoidActivation(Activation):
-    def __repr__(self):
+    def __str__(self):
         return 'Sigmoid Activation Function'
 
     def evaluate(self, z):
@@ -52,7 +52,7 @@ class SigmoidActivation(Activation):
 
 
 class TanhActivation(Activation):
-    def __repr__(self):
+    def __str__(self):
         return 'Tanh Activation Function'
 
     def evaluate(self, z):
@@ -67,7 +67,7 @@ class TanhActivation(Activation):
 
 
 class ReluActivation(Activation):
-    def __repr__(self):
+    def __str__(self):
         return 'ReLU Activation Function'
 
     def evaluate(self, z):
@@ -80,7 +80,7 @@ class ReluActivation(Activation):
 
 
 class LeakyReluActivation(Activation):
-    def __repr__(self):
+    def __str__(self):
         return 'Leaky ReLU Activation Function'
 
     def evaluate(self, z):

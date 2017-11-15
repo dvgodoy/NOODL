@@ -27,12 +27,14 @@ if __name__ == '__main__':
     h21 = Hidden(relu)
     h22 = Hidden(relu)
 
-    o = Output(sigmoid, LogLoss())
+    learning_rate = 0.3
+    o = Output(sigmoid, LogLoss(), learning_rate)
 
     i1.connect(h11)
     i1.connect(h12)
     i2.connect(h11)
     i2.connect(h12)
+    #i2.connect(h22)
 
     h11.connect(h21)
     h11.connect(h22)
@@ -42,53 +44,15 @@ if __name__ == '__main__':
     h21.connect(o)
     h22.connect(o)
 
-    i1.examples(x1)
-    i2.examples(x2)
-    o.responses(y)
+    i1.initialize()
+    i2.initialize()
+    o.initialize()
 
-    learning_rate = 0.3
     epochs = 1000
-
-    history = []
     for _ in range(epochs):
-        # Forward propagation steps
-        ## 1st layer
-        h11.forward_propagation()
-        h12.forward_propagation()
-        ## 2nd layer
-        h21.forward_propagation()
-        h22.forward_propagation()
-        ## output layer
-        o.forward_propagation()
+        o.responses(y)
+        i1.examples(x1)
+        i2.examples(x2)
 
-        cost = o.compute_cost()
-        history.append(cost)
-
-        # Backpropagation steps
-        ## output layer
-        o.back_propagation()
-        o.update_parameters(learning_rate)
-
-        ## 2nd layer
-        h21.back_propagation()
-        h21.update_parameters(learning_rate)
-        h22.back_propagation()
-        h22.update_parameters(learning_rate)
-
-        ## 1st layer
-        h11.back_propagation()
-        h11.update_parameters(learning_rate)
-        h12.back_propagation()
-        h12.update_parameters(learning_rate)
-
-    print(np.array(history))
-    print(h11.weights)
-    print(h12.weights)
-    print(h21.weights)
-    print(h22.weights)
-    print(o.weights)
-    print(h11.activations)
-    print(h12.activations)
-    print(h21.activations)
-    print(h22.activations)
+        print(o.cost)
     print(o.activations)
