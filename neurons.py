@@ -103,6 +103,10 @@ class Neuron(Node):
     def activations(self):
         return self._activations
 
+    @property
+    def charged(self):
+        return self._charged
+
     def update_parameters(self, learning_rate):
         self._weights = self._weights - learning_rate * self._dw
         self._bias = self._bias - learning_rate * self._db
@@ -114,7 +118,8 @@ class Neuron(Node):
 
     def add_input(self, neuron):
         super(Neuron, self).add_input(neuron)
-        self._weights = np.append(self._weights, np.random.randn(1, 1) * 0.01).reshape(1, -1)
+        n_weights = self._weights.shape[1] + 1
+        self._weights = (np.random.randn(1, n_weights) * np.sqrt(2. / n_weights)).reshape(1, -1)
         self._inputs = np.zeros((len(self._input_nodes), 0))
         self._input_activated = np.zeros(len(self._input_nodes))
 
@@ -133,7 +138,7 @@ class Neuron(Node):
                 neuron.add_input(self)
 
     @abc.abstractmethod
-    def forward_propagation(self):
+    def forward_propagation(self, mu=0.0, var=1.0):
         pass
 
     @abc.abstractmethod
@@ -168,14 +173,18 @@ class Neuron(Node):
             self._inputs[i, np.newaxis, :] = activations
 
             if np.all(self._input_activated):
+                assert self._inputs.shape[1] > 0
+                assert self._weights.shape[1] == self._inputs.shape[0]
+                assert self._bias.shape == (1, 1)
                 self._charged = True
+                self._z = np.dot(self._weights, self._inputs) + self._bias
                 if self._auto_prop:
                     self.fire()
 
-    def fire(self):
+    def fire(self, mu=0.0, var=1.0):
         if self._charged:
             self._input_activated -= 1.
-            self.forward_propagation()
+            self.forward_propagation(mu, var)
 
 
 class Input(Neuron):
@@ -191,10 +200,11 @@ class Input(Neuron):
         assert X.shape[0] == 1
 
         self._m = X.shape[1]
+        self._z = X
         self._activations = X
         self.forward_propagation()
 
-    def forward_propagation(self):
+    def forward_propagation(self, mu=0.0, var=1.0):
         for neuron in self._output_nodes:
             neuron.input_from(self._activations, self)
 
@@ -203,6 +213,7 @@ class Input(Neuron):
 
     def initialize(self):
         self._initialize_forward()
+
 
 class Hidden(Neuron):
     def __init__(self, activation_function, **kwargs):
@@ -215,12 +226,9 @@ class Hidden(Neuron):
     def __str__(self):
         return 'Hidden Neuron {}'.format(self._inputs.shape)
 
-    def forward_propagation(self):
-        assert self._inputs.shape[1] > 0
-        assert self._weights.shape[1] == self._inputs.shape[0]
-        assert self._bias.shape == (1, 1)
-
-        self._z = np.dot(self._weights, self._inputs) + self._bias
+    def forward_propagation(self, mu=0.0, var=1.0):
+        # self._z = np.dot(self._weights, self._inputs) + self._bias
+        self._z = (self._z - mu) / np.sqrt(var + 1e-7)
         self._activations = self._activation_function.evaluate(self._z)
         for neuron in self._output_nodes:
             neuron.input_from(self._activations, self)
@@ -249,6 +257,7 @@ class Output(Hidden):
             learning_rate = lambda epochs: constant
         self._learning_rate = learning_rate
         self._y = np.zeros((1, 0))
+        self._output_feedback = np.zeros(1)
         self._epochs = 0
         self._cost = np.inf
 
@@ -264,7 +273,7 @@ class Output(Hidden):
         assert y.shape[0] == 1
         self._y = y
 
-    def forward_propagation(self):
+    def forward_propagation(self, mu=0.0, var=1.0):
         super(Output, self).forward_propagation()
         self._cost = self.compute_cost()
         self._epochs += 1

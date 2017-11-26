@@ -62,7 +62,7 @@ class TanhActivation(Activation):
 
     def derivative(self):
         def func(z):
-            return 1 - self.evaluate() ** 2
+            return 1 - self.evaluate(z) ** 2
         return func
 
 
